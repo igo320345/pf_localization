@@ -16,7 +16,7 @@ Eigen::Matrix4d poseToMatrix(const geometry_msgs::msg::Pose& pose);
 geometry_msgs::msg::Pose matrixToPose(const Eigen::Matrix4d& P);
 double angleDiff(double a, double b);
 Eigen::Vector3d vectorCoordAdd(const Eigen::Vector3d& a, const Eigen::Vector3d& b);
-std::pair<int, int> metricToGridCoords(double x, double y, const nav_msgs::msg::MapMetaData& map_info);
+Eigen::Vector2i metricToGridCoords(double x, double y, const nav_msgs::msg::MapMetaData& map_info);
 double mapCalcRange(const std::vector<std::vector<int>>& map, const nav_msgs::msg::MapMetaData& map_info, 
                     double x, double y, double yaw, double max_range);
                     

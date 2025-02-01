@@ -81,14 +81,11 @@ Eigen::Vector3d vectorCoordAdd(const Eigen::Vector3d& a, const Eigen::Vector3d& 
     return c;
 }
 
-std::pair<int, int> metricToGridCoords(double x, double y, const nav_msgs::msg::MapMetaData& map_info) {
+Eigen::Vector2i metricToGridCoords(double x, double y, const nav_msgs::msg::MapMetaData& map_info) {
     int gx = static_cast<int>((x - map_info.origin.position.x) / map_info.resolution);
     int gy = static_cast<int>((y - map_info.origin.position.y) / map_info.resolution);
-
-    int row = std::fmin(std::fmax(gy, 0), map_info.height);
-    int col = std::fmin(std::fmax(gx, 0), map_info.width);
-
-    return {row, col};
+    return Eigen::Vector2i(std::max(0, std::min(gx, static_cast<int>(map_info.width))),
+                            std::max(0, std::min(gy, static_cast<int>(map_info.height))));
 }
 
 double mapCalcRange(const std::vector<std::vector<int>>& map, const nav_msgs::msg::MapMetaData& map_info, 
