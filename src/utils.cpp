@@ -1,12 +1,4 @@
-#include <cmath>
-#include <vector>
-#include <algorithm>
-
-#include "geometry_msgs/msg/pose.hpp"
-#include "nav_msgs/msg/map_meta_data.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2/LinearMath/Matrix3x3.h"
-#include "Eigen/Dense"
+#include "pf_localization/utils.hpp"
 
 Eigen::Matrix4d transformToMatrix(const std::pair<Eigen::Vector3d, tf2::Quaternion>& transform) {
     Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
