@@ -15,10 +15,13 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 
 add_executable(pf_localization src/pf_localization.cpp)
-ament_target_dependencies(pf_localization rclcpp std_msgs sensor_msgs nav_msgs)
+ament_target_dependencies(pf_localization rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_geometry_msgs)
 
 install(TARGETS
   pf_localization
