@@ -32,6 +32,10 @@ namespace pf_localization
         weights_.resize(num_particles_, 0);
         init_filter();
     }
+    ParticleFilter::~ParticleFilter() 
+    {
+
+    }
     void ParticleFilter::init_filter() 
     {
         std::random_device rd;
