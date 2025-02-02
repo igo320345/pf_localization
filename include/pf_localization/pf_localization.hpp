@@ -14,6 +14,10 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
+#include "tf2/utils.h"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include "pf_localization/particle_filter.hpp"
 
 using std::placeholders::_1;
@@ -25,15 +29,14 @@ namespace pf_localization
     public:
         ParticleFilterLocalization();
         ~ParticleFilterLocalization();
+        void spin();
     private:
-        void loop();
         void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
         void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
         void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
         void publish_pose();
         void create_pf();
 
-        rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_subscription_;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;

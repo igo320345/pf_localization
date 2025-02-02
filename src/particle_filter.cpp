@@ -75,7 +75,7 @@ namespace pf_localization
         particles_ = new_particles;
         std::fill(weights_.begin(), weights_.end(), 1.0 / num_particles_);
     }
-    Eigen::Vector3d ParticleFilter::localize(const Eigen::Vector3d& odom, const std::vector<double>& ranges, const nav_msgs::msg::MapMetaData& map)
+    Eigen::Vector3d ParticleFilter::localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map)
     {
         // TODO
     }

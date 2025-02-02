@@ -4,6 +4,8 @@
 #include <random>
 
 #include "pf_localization/utils.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+
 
 namespace pf_localization
 {
@@ -32,7 +34,7 @@ namespace pf_localization
 
             void init_filter();
             void resample();
-            Eigen::Vector3d localize(const Eigen::Vector3d& odom, const std::vector<double>& ranges, const nav_msgs::msg::MapMetaData& map);
+            Eigen::Vector3d localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map);
         private:
             void sample_motion_model_odometry(const Eigen::Vector3d& odom);
             void beam_range_finder_model(const std::vector<double>& ranges);

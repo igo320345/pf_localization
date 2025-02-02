@@ -53,6 +53,7 @@ target_link_libraries(${library_name} PUBLIC
   Eigen3::Eigen
   tf2::tf2
   tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
   particle_filter
 )
 
@@ -93,7 +94,7 @@ install(DIRECTORY include/
 ament_export_include_directories(include/${PROJECT_NAME})
 ament_export_libraries(${library_name})
 ament_export_libraries(particle_filter)
-ament_export_dependencies(rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_geometry_msgs)
+ament_export_dependencies(rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
 ament_export_targets(${library_name})
 ament_export_targets(particle_filter)
 

@@ -52,8 +52,6 @@ namespace pf_localization
     "diff_drive/odometry", 10, std::bind(&ParticleFilterLocalization::odom_callback, this, _1));
     map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
     "map", 10, std::bind(&ParticleFilterLocalization::map_callback, this, _1));
-    timer_ = this->create_wall_timer(
-    std::chrono::microseconds((int) 1.0e6 / rate_hz_), std::bind(&ParticleFilterLocalization::loop, this));
   }
 
   ParticleFilterLocalization::~ParticleFilterLocalization()
@@ -61,15 +59,19 @@ namespace pf_localization
     
   }
 
-  void ParticleFilterLocalization::loop()
+  void ParticleFilterLocalization::spin() 
   {
-    if (odom_ != nullptr && map_ != nullptr && scan_ != nullptr) {
-      if (particle_filter_ == nullptr) {
-        create_pf();
-      }
-      else {
-        this->publish_pose();
-      }
+    rclcpp::Rate rate(rate_hz_);
+    while (rclcpp::ok()) {
+        if (odom_ && scan_ && map_) {
+            if (!particle_filter_) {
+                this->create_pf();
+            } else {
+                this->publish_pose();
+            }
+        }
+        rclcpp::spin_some(this->get_node_base_interface());
+        rate.sleep();
     }
   }
   void ParticleFilterLocalization::laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
@@ -86,15 +88,28 @@ namespace pf_localization
   }
   void ParticleFilterLocalization::publish_pose()
   {
-    auto message = geometry_msgs::msg::PoseStamped();
-    pose_publisher_->publish(message);
+    auto odom = Eigen::Vector3d(odom_->pose.pose.position.x, 
+    odom_->pose.pose.position.y,
+    tf2::getYaw(odom_->pose.pose.orientation));
+    auto pose = particle_filter_->localize(odom, scan_->ranges, *map_);
+    pose_->header.stamp = this->get_clock()->now();
+    pose_->pose.position.x = pose(0);
+    pose_->pose.position.y = pose(1);
+    tf2::Quaternion q;
+    q.setRPY(0, 0, pose(2));
+    pose_->pose.orientation.x = q.x();
+    pose_->pose.orientation.y = q.y();
+    pose_->pose.orientation.z = q.z();
+    pose_->pose.orientation.w = q.w();
+    pose_publisher_->publish(*pose_);
+
+    // TODO: broadcast transform;
   }
   void ParticleFilterLocalization::create_pf()
   {
     auto t = tf_buffer_->lookupTransform(base_frame_id_, scan_->header.frame_id, tf2::TimePointZero);
-    laser_pose_[0] = t.transform.translation.x;
-    laser_pose_[1] = t.transform.translation.y;
-    laser_pose_[2] = 0; // TODO
+    laser_pose_ = Eigen::Vector3d(t.transform.translation.x, t.transform.translation.y, tf2::getYaw(t.transform.rotation));
+
     laser_min_angle_ = scan_->angle_min;
     laser_max_angle_ = scan_->angle_max;
     laser_max_range_= scan_->range_max;
