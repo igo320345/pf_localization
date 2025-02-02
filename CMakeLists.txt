@@ -27,6 +27,10 @@ add_library(particle_filter SHARED
   src/particle_filter.cpp
 )
 
+add_library(pf_utils SHARED
+  src/utils.cpp
+)
+
 target_include_directories(${library_name}
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -37,12 +41,26 @@ target_include_directories(particle_filter
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
+target_include_directories(pf_utils
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
+target_link_libraries(pf_utils PUBLIC
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  rclcpp::rclcpp
+  Eigen3::Eigen
+  tf2::tf2
+)
+
 target_link_libraries(particle_filter PUBLIC
   ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
   rclcpp::rclcpp
   Eigen3::Eigen
   tf2::tf2
+  pf_utils
 )
 
 target_link_libraries(${library_name} PUBLIC
@@ -55,6 +73,7 @@ target_link_libraries(${library_name} PUBLIC
   tf2_ros::tf2_ros
   tf2_geometry_msgs::tf2_geometry_msgs
   particle_filter
+  pf_utils
 )
 
 add_executable(${executable_name}
@@ -83,6 +102,13 @@ install(TARGETS particle_filter
   RUNTIME DESTINATION bin
 )
 
+install(TARGETS pf_utils
+  EXPORT pf_utils
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 install(TARGETS ${executable_name}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
@@ -94,9 +120,11 @@ install(DIRECTORY include/
 ament_export_include_directories(include/${PROJECT_NAME})
 ament_export_libraries(${library_name})
 ament_export_libraries(particle_filter)
+ament_export_libraries(pf_utils)
 ament_export_dependencies(rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
 ament_export_targets(${library_name})
 ament_export_targets(particle_filter)
+ament_export_targets(pf_utils)
 
 
 if(BUILD_TESTING)
