@@ -35,6 +35,7 @@ namespace pf_localization
             void init_filter();
             void resample();
             Eigen::Vector3d localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map);
+            std::vector<Eigen::Vector3d> particles;
         private:
             void sample_motion_model_odometry(const Eigen::Vector3d& odom);
             void beam_range_finder_model(const std::vector<float>& ranges);
@@ -50,7 +51,6 @@ namespace pf_localization
             double odom_alpha1_, odom_alpha2_, odom_alpha3_, odom_alpha4_;
             Eigen::Vector3d current_state_;
             Eigen::Vector3d prev_odom_;
-            std::vector<Eigen::Vector3d> particles_;
             std::vector<double> weights_;
             std::shared_ptr<std::vector<std::vector<uint8_t>>> grid_bin_;
             nav_msgs::msg::MapMetaData map_info_;

@@ -29,7 +29,7 @@ namespace pf_localization
         prev_odom_(Eigen::Vector3d::Zero()) 
     {
         current_state_ = init_state;
-        particles_.resize(num_particles_, Eigen::Vector3d::Zero());
+        particles.resize(num_particles_, Eigen::Vector3d::Zero());
         weights_.resize(num_particles_, 0);
         this->init_filter();
     }
@@ -46,7 +46,7 @@ namespace pf_localization
         std::normal_distribution<double> dist_yaw(init_state_(2), M_PI / 4);
 
         for (int i = 0; i < num_particles_; ++i) {
-            particles_[i] = Eigen::Vector3d(dist_x(gen), dist_y(gen), dist_yaw(gen));
+            particles[i] = Eigen::Vector3d(dist_x(gen), dist_y(gen), dist_yaw(gen));
         }
         weights_.resize(num_particles_, 1.0 / num_particles_);
     }
@@ -70,10 +70,10 @@ namespace pf_localization
             while (currentPoint > cValues[s]) {
                 s++;
             }
-            new_particles[j] = particles_[s];
+            new_particles[j] = particles[s];
         }
 
-        particles_ = new_particles;
+        particles = new_particles;
         std::fill(weights_.begin(), weights_.end(), 1.0 / num_particles_);
     }
     Eigen::Vector3d ParticleFilter::localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map)
@@ -129,7 +129,7 @@ namespace pf_localization
             double dhat_rot2 = angleDiff(d_rot2, noise_rot2(gen));
 
 
-            for(auto &particle : particles_) {
+            for(auto &particle : particles) {
                 particle[0] += dhat_trans * std::cos(particle[2] + dhat_rot1);
                 particle[1] += dhat_trans * std::sin(particle[2] + dhat_rot1);
                 particle[2] += dhat_rot1 + dhat_rot2;
@@ -144,7 +144,7 @@ namespace pf_localization
 
         for (int i = 0; i < num_particles_; ++i) {
             double q = 1.0;
-            Eigen::Vector3d pose = pf_localization::vectorCoordAdd(laser_pose_, particles_[i]);  
+            Eigen::Vector3d pose = pf_localization::vectorCoordAdd(laser_pose_, particles[i]);  
             int step = ranges.size() / laser_beams_;
 
             for (uint32_t k = 0; k < ranges.size(); k += step) {
@@ -177,7 +177,7 @@ namespace pf_localization
     {
         Eigen::Vector3d mean_state = Eigen::Vector3d::Zero();
         for (int i = 0; i < num_particles_; ++i) {
-            mean_state += particles_[i] * weights_[i];
+            mean_state += particles[i] * weights_[i];
         }
         current_state_ = mean_state;
     }

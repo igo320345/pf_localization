@@ -11,6 +11,7 @@ find_package(Eigen3 REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -67,6 +68,7 @@ target_link_libraries(${library_name} PUBLIC
   ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
   ${sensor_msgs_TARGETS}
+  ${visualization_msgs_TARGETS}
   rclcpp::rclcpp
   Eigen3::Eigen
   tf2::tf2
@@ -121,7 +123,7 @@ ament_export_include_directories(include/${PROJECT_NAME})
 ament_export_libraries(${library_name})
 ament_export_libraries(particle_filter)
 ament_export_libraries(pf_utils)
-ament_export_dependencies(rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
+ament_export_dependencies(rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs visualization_msgs tf2 tf2_ros tf2_geometry_msgs)
 ament_export_targets(${library_name})
 ament_export_targets(particle_filter)
 ament_export_targets(pf_utils)

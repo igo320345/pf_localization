@@ -46,6 +46,7 @@ namespace pf_localization
     pose_->header.frame_id = global_frame_id_;
 
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("pose", 10);
+    particles_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("particles", 10);
     laser_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
     "diff_drive/scan", 10, std::bind(&ParticleFilterLocalization::laser_callback, this, _1));
     odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
@@ -68,6 +69,7 @@ namespace pf_localization
                 this->create_pf();
             } else {
                 this->publish_pose();
+                this->publish_particles();
             }
         }
         rclcpp::spin_some(this->get_node_base_interface());
@@ -118,19 +120,61 @@ namespace pf_localization
     transform_msg.transform.rotation = map_transform.orientation;
     tf_broadcaster_->sendTransform(transform_msg);
   }
+  void ParticleFilterLocalization::publish_particles()
+  {
+    auto marker_array = visualization_msgs::msg::MarkerArray();
+    auto t = this->get_clock()->now();
+    int i = 0;
+    for (auto &particle : this->particle_filter_->particles) {
+      auto marker = visualization_msgs::msg::Marker();
+      marker.header.stamp = t;
+      marker.header.frame_id = global_frame_id_;
+      marker.ns = "particles";
+      marker.id = i;
+      marker.type = 0;
+      marker.action = 0;
+      marker.lifetime = rclcpp::Duration::from_seconds(1.0);
+      double yaw_in_map = particle[2];
+      double vx = std::cos(yaw_in_map);
+      double vy = std::sin(yaw_in_map);
+      marker.color.r = 0.0;
+      marker.color.g = 1.0;
+      marker.color.b = 0.0;
+      marker.color.a = 1.0;
+      auto point1 = geometry_msgs::msg::Point();
+      auto point2 = geometry_msgs::msg::Point();
+      point1.x = particle[0];
+      point1.y = particle[1];
+      point1.z = 0.2;
+      point2.x = particle[0] + 0.3 * vx;
+      point2.y = particle[1] + 0.3 * vy;
+      point2.z = 0.2;
+      marker.points.push_back(point1);
+      marker.points.push_back(point2);
+      marker.scale.x = 0.05;
+      marker.scale.y = 0.15;
+      marker.scale.z = 0.1;
+      marker_array.markers.push_back(marker);
+      i++;
+    }
+    particles_publisher_->publish(marker_array);
+  }
   void ParticleFilterLocalization::create_pf()
   {
-    auto t = tf_buffer_->lookupTransform(base_frame_id_, scan_->header.frame_id, tf2::TimePointZero);
-    laser_pose_ = Eigen::Vector3d(t.transform.translation.x, t.transform.translation.y, tf2::getYaw(t.transform.rotation));
-
-    laser_min_angle_ = scan_->angle_min;
-    laser_max_angle_ = scan_->angle_max;
-    laser_max_range_= scan_->range_max;
-    init_state_ = Eigen::Vector3d::Zero();
-
-    particle_filter_ = std::make_shared<pf_localization::ParticleFilter>(laser_pose_, laser_min_angle_,
-    laser_max_angle_, laser_max_range_, num_particles_, init_state_, laser_beams_, laser_sigma_hit_, 
-    laser_z_hit_, laser_z_rand_, laser_z_short_, laser_z_max_, laser_lambda_short_, odom_alpha1_, 
-    odom_alpha2_, odom_alpha3_, odom_alpha4_);
+    try {
+      auto t = tf_buffer_->lookupTransform(base_frame_id_, scan_->header.frame_id, tf2::TimePointZero);
+      laser_pose_ = Eigen::Vector3d(t.transform.translation.x, t.transform.translation.y, tf2::getYaw(t.transform.rotation));
+      laser_min_angle_ = scan_->angle_min;
+      laser_max_angle_ = scan_->angle_max;
+      laser_max_range_= scan_->range_max;
+      init_state_ = Eigen::Vector3d::Zero();
+      particle_filter_ = std::make_shared<pf_localization::ParticleFilter>(laser_pose_, laser_min_angle_,
+      laser_max_angle_, laser_max_range_, num_particles_, init_state_, laser_beams_, laser_sigma_hit_, 
+      laser_z_hit_, laser_z_rand_, laser_z_short_, laser_z_max_, laser_lambda_short_, odom_alpha1_, 
+      odom_alpha2_, odom_alpha3_, odom_alpha4_);
+      RCLCPP_INFO(this->get_logger(), "pf created!");
+    } catch (tf2::TransformException &ex) {
+      RCLCPP_WARN(this->get_logger(), "Could not transform: %s", ex.what());
+    }
   }
 }

@@ -19,6 +19,10 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include "pf_localization/particle_filter.hpp"
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
+#include <std_msgs/msg/color_rgba.hpp>
+#include <geometry_msgs/msg/point.hpp>
 
 using std::placeholders::_1;
 
@@ -35,9 +39,11 @@ namespace pf_localization
         void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
         void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
         void publish_pose();
+        void publish_particles();
         void create_pf();
 
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr particles_publisher_;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_subscription_;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
