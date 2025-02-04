@@ -48,7 +48,7 @@ namespace pf_localization
         for (int i = 0; i < num_particles_; ++i) {
             particles[i] = Eigen::Vector3d(dist_x(gen), dist_y(gen), dist_yaw(gen));
         }
-        weights_.resize(num_particles_, 1.0 / num_particles_);
+        std::fill(weights_.begin(), weights_.end(), 1.0 / num_particles_);
     }
     void ParticleFilter::resample()
     {
@@ -108,7 +108,6 @@ namespace pf_localization
     void ParticleFilter::sample_motion_model_odometry(const Eigen::Vector3d& odom) 
     {
         double d_trans = std::hypot(prev_odom_(0) - odom(0), prev_odom_(1) - odom(1));
-
         double d_rot1 = (d_trans < 0.01) ? 0.0
                                          : pf_localization::angleDiff(std::atan2(odom(1) - prev_odom_(1), odom(0) - prev_odom_(0)), prev_odom_(2));
         double d_rot2 = pf_localization::angleDiff(odom(2) - prev_odom_(2), d_rot1);
@@ -128,12 +127,9 @@ namespace pf_localization
             double dhat_trans = d_trans - noise_trans(gen);
             double dhat_rot2 = angleDiff(d_rot2, noise_rot2(gen));
 
-
-            for(auto &particle : particles) {
-                particle[0] += dhat_trans * std::cos(particle[2] + dhat_rot1);
-                particle[1] += dhat_trans * std::sin(particle[2] + dhat_rot1);
-                particle[2] += dhat_rot1 + dhat_rot2;
-            }
+            particles[i][0] += dhat_trans * std::cos(particles[i][2] + dhat_rot1);
+            particles[i][1] += dhat_trans * std::sin(particles[i][2] + dhat_rot1);
+            particles[i][2] += dhat_rot1 + dhat_rot2;
         }
 
         prev_odom_ = odom;
