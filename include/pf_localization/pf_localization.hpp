@@ -35,12 +35,12 @@ namespace pf_localization
         ~ParticleFilterLocalization();
         void spin();
     private:
-        void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-        void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
-        void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-        void publish_pose();
-        void publish_particles();
-        void create_pf();
+        void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+        void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+        void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+        void publishPose();
+        void publishParticles();
+        void createParticleFilter();
 
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr particles_publisher_;

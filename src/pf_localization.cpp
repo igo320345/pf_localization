@@ -48,11 +48,11 @@ namespace pf_localization
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("pose", 10);
     particles_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("particles", 10);
     laser_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-    "diff_drive/scan", 10, std::bind(&ParticleFilterLocalization::laser_callback, this, _1));
+    "diff_drive/scan", 10, std::bind(&ParticleFilterLocalization::laserCallback, this, _1));
     odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-    "diff_drive/odometry", 10, std::bind(&ParticleFilterLocalization::odom_callback, this, _1));
+    "diff_drive/odometry", 10, std::bind(&ParticleFilterLocalization::odomCallback, this, _1));
     map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-    "map", 10, std::bind(&ParticleFilterLocalization::map_callback, this, _1));
+    "map", 10, std::bind(&ParticleFilterLocalization::mapCallback, this, _1));
   }
 
   ParticleFilterLocalization::~ParticleFilterLocalization()
@@ -66,29 +66,29 @@ namespace pf_localization
     while (rclcpp::ok()) {
         if (odom_ && scan_ && map_) {
             if (!particle_filter_) {
-                this->create_pf();
+                this->createParticleFilter();
             } else {
-                this->publish_pose();
-                this->publish_particles();
+                this->publishPose();
+                this->publishParticles();
             }
         }
         rclcpp::spin_some(this->get_node_base_interface());
         rate.sleep();
     }
   }
-  void ParticleFilterLocalization::laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+  void ParticleFilterLocalization::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
   {
     scan_ = msg;
   }
-  void ParticleFilterLocalization::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+  void ParticleFilterLocalization::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
   {
     odom_ = msg;
   }
-  void ParticleFilterLocalization::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+  void ParticleFilterLocalization::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
   {
     map_ = msg;
   }
-  void ParticleFilterLocalization::publish_pose()
+  void ParticleFilterLocalization::publishPose()
   {
     auto odom = Eigen::Vector3d(odom_->pose.pose.position.x, 
     odom_->pose.pose.position.y,
@@ -120,12 +120,12 @@ namespace pf_localization
     transform_msg.transform.rotation = map_transform.orientation;
     tf_broadcaster_->sendTransform(transform_msg);
   }
-  void ParticleFilterLocalization::publish_particles()
+  void ParticleFilterLocalization::publishParticles()
   {
     auto marker_array = visualization_msgs::msg::MarkerArray();
     auto t = this->get_clock()->now();
     int i = 0;
-    for (auto &particle : this->particle_filter_->particles) {
+    for (auto &particle : this->particle_filter_->particles_) {
       auto marker = visualization_msgs::msg::Marker();
       marker.header.stamp = t;
       marker.header.frame_id = global_frame_id_;
@@ -159,7 +159,7 @@ namespace pf_localization
     }
     particles_publisher_->publish(marker_array);
   }
-  void ParticleFilterLocalization::create_pf()
+  void ParticleFilterLocalization::createParticleFilter()
   {
     try {
       auto t = tf_buffer_->lookupTransform(base_frame_id_, scan_->header.frame_id, tf2::TimePointZero);

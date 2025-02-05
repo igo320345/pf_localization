@@ -32,14 +32,14 @@ namespace pf_localization
             double odom_alpha4);
             ~ParticleFilter();
 
-            void init_filter();
+            void initFilter();
             void resample();
             Eigen::Vector3d localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map);
-            std::vector<Eigen::Vector3d> particles;
+            std::vector<Eigen::Vector3d> particles_;
         private:
-            void sample_motion_model_odometry(const Eigen::Vector3d& odom);
-            void beam_range_finder_model(const std::vector<float>& ranges);
-            void calc_mean_state();
+            void sampleMotionModelOdometry(const Eigen::Vector3d& odom);
+            void beamRangeFinderModel(const std::vector<float>& ranges);
+            void calculateMeanState();
 
             
             Eigen::Vector3d laser_pose_;

@@ -29,15 +29,15 @@ namespace pf_localization
         prev_odom_(Eigen::Vector3d::Zero()) 
     {
         current_state_ = init_state;
-        particles.resize(num_particles_, Eigen::Vector3d::Zero());
+        particles_.resize(num_particles_, Eigen::Vector3d::Zero());
         weights_.resize(num_particles_, 0);
-        this->init_filter();
+        this->initFilter();
     }
     ParticleFilter::~ParticleFilter() 
     {
 
     }
-    void ParticleFilter::init_filter() 
+    void ParticleFilter::initFilter() 
     {
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -46,7 +46,7 @@ namespace pf_localization
         std::normal_distribution<double> dist_yaw(init_state_(2), M_PI / 4);
 
         for (int i = 0; i < num_particles_; ++i) {
-            particles[i] = Eigen::Vector3d(dist_x(gen), dist_y(gen), dist_yaw(gen));
+            particles_[i] = Eigen::Vector3d(dist_x(gen), dist_y(gen), dist_yaw(gen));
         }
         std::fill(weights_.begin(), weights_.end(), 1.0 / num_particles_);
     }
@@ -70,10 +70,10 @@ namespace pf_localization
             while (currentPoint > cValues[s]) {
                 s++;
             }
-            new_particles[j] = particles[s];
+            new_particles[j] = particles_[s];
         }
 
-        particles = new_particles;
+        particles_ = new_particles;
         std::fill(weights_.begin(), weights_.end(), 1.0 / num_particles_);
     }
     Eigen::Vector3d ParticleFilter::localize(const Eigen::Vector3d& odom, const std::vector<float>& ranges, const nav_msgs::msg::OccupancyGrid& map)
@@ -83,8 +83,8 @@ namespace pf_localization
             grid_bin_ = std::make_shared<std::vector<std::vector<uint8_t>>>(pf_localization::convertOccupancyGrid(map));
         }
 
-        this->sample_motion_model_odometry(odom);
-        this->beam_range_finder_model(ranges);
+        this->sampleMotionModelOdometry(odom);
+        this->beamRangeFinderModel(ranges);
 
         double sum_weights = std::accumulate(weights_.begin(), weights_.end(), 0.0);
         if (sum_weights > 0) {
@@ -101,11 +101,11 @@ namespace pf_localization
             this->resample();
         }
 
-        this->calc_mean_state();
+        this->calculateMeanState();
         return current_state_;
     }
 
-    void ParticleFilter::sample_motion_model_odometry(const Eigen::Vector3d& odom) 
+    void ParticleFilter::sampleMotionModelOdometry(const Eigen::Vector3d& odom) 
     {
         double d_trans = std::hypot(prev_odom_(0) - odom(0), prev_odom_(1) - odom(1));
         double d_rot1 = (d_trans < 0.01) ? 0.0
@@ -127,20 +127,20 @@ namespace pf_localization
             double dhat_trans = d_trans - noise_trans(gen);
             double dhat_rot2 = angleDiff(d_rot2, noise_rot2(gen));
 
-            particles[i][0] += dhat_trans * std::cos(particles[i][2] + dhat_rot1);
-            particles[i][1] += dhat_trans * std::sin(particles[i][2] + dhat_rot1);
-            particles[i][2] += dhat_rot1 + dhat_rot2;
+            particles_[i][0] += dhat_trans * std::cos(particles_[i][2] + dhat_rot1);
+            particles_[i][1] += dhat_trans * std::sin(particles_[i][2] + dhat_rot1);
+            particles_[i][2] += dhat_rot1 + dhat_rot2;
         }
 
         prev_odom_ = odom;
     }
-    void ParticleFilter::beam_range_finder_model(const std::vector<float>& ranges)
+    void ParticleFilter::beamRangeFinderModel(const std::vector<float>& ranges)
     {
         std::vector<double> angles = pf_localization::linspace(laser_min_angle_, laser_max_angle_, ranges.size());
 
         for (int i = 0; i < num_particles_; ++i) {
             double q = 1.0;
-            Eigen::Vector3d pose = pf_localization::vectorCoordAdd(laser_pose_, particles[i]);  
+            Eigen::Vector3d pose = pf_localization::vectorCoordAdd(laser_pose_, particles_[i]);  
             int step = ranges.size() / laser_beams_;
 
             for (uint32_t k = 0; k < ranges.size(); k += step) {
@@ -169,11 +169,11 @@ namespace pf_localization
             weights_[i] *= q;
         }
     }
-    void ParticleFilter::calc_mean_state() 
+    void ParticleFilter::calculateMeanState() 
     {
         Eigen::Vector3d mean_state = Eigen::Vector3d::Zero();
         for (int i = 0; i < num_particles_; ++i) {
-            mean_state += particles[i] * weights_[i];
+            mean_state += particles_[i] * weights_[i];
         }
         current_state_ = mean_state;
     }
