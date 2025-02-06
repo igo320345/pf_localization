@@ -1,6 +1,9 @@
 # Particle Filter Localization
 ## Description
-![pf_localization plot](images/pf_localization.png)
+![trajectory plot](images/trajectory.png)
+![particle clouds plot](images/particle_clouds.png)
+![error plot](images/error.png)
+
 ## Topics
 ## Parameters
 ## TF
